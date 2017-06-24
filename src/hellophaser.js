@@ -6,9 +6,18 @@ function preload() {
     game.load.image("background", "res/background.jpg");
     game.load.image("paddle", "res/paddle.jpg");
     game.load.image("ball", "res/ball.png");
+    game.load.image("food", "res/bricks.jpg");
 }
 var paddle;
 var ball;
+var bricks;
+
+var lives = 3;
+var score = 0;
+
+var scoreText;
+var livesText;
+var introText;
 
 function create() {
     game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -31,24 +40,34 @@ function create() {
     ball.body.bounce.set(1);
 
 
-    ball.events.onOutOfBounds.add(ballReset, this);
+    ball.events.onOutOfBounds.add(ballLost, this);
     game.input.onDown.add(launchBall, this);
 
 
-    bricks=game.add.group();
-    bricks.enableBody=true;
-    bricks.physicsBodyType=Phaser.Physics.ARCADE;
-    var bricksPreFab;
-    var rowCount=4;
-    var columnCount=8;
+    bricks = game.add.group();
+    bricks.enableBody = true;
+    bricks.physicsBodyType = Phaser.Physics.ARCADE;
 
-    for(var y;y<rowCount;y++){
-        for(var x=0;x<columnCount;x++){
-            bricksPreFab=bricks.create(0,0,"bricks");
-            bricksPreFab.body.bounce.set(1);
-            bricksPreFab.body.immovable=true;
+    var brick;
+
+    for (var y = 0; y < 4; y++)
+    {
+        for (var x = 0; x < 15; x++)
+        {
+            brick = bricks.create(120 + (x * 36), 100 + (y * 52), 'food');
+            brick.scale.set(0.15);
+            brick.body.bounce.set(1);
+            brick.body.immovable = true;
         }
     }
+
+
+
+    scoreText = game.add.text(32, 550, 'score: 0', { font: "20px Arial", fill: "#ffffff", align: "left" });
+    livesText = game.add.text(680, 550, 'lives: 3', { font: "20px Arial", fill: "#ffffff", align: "left" });
+    introText = game.add.text(game.world.centerX, 400, '- click to start -', { font: "40px Arial", fill: "#ffffff", align: "center" });
+    introText.anchor.setTo(0.5, 0.5);
+
 
 }
 var bHasLaunch = false;
@@ -57,6 +76,7 @@ function update() {
     paddle.x = game.input.x;
     if (bHasLaunch) {
         game.physics.arcade.collide(ball, paddle, ballHitPaddle, null, this);
+        game.physics.arcade.collide(ball, bricks, ballHitBrick, null, this);
     }
 }
 
@@ -67,15 +87,66 @@ function launchBall() {
         bHasLaunch = true;
         ball.body.velocity.y = -250;
         ball.body.velocity.x = 75;
+        // ball.animations.play('spin');
+        introText.visible = false;
     }
 
 }
 
 
-function ballReset() {
-    bHasLaunch = false;
-    ball.reset(paddle.body.x, paddle.body.y - 20);
+function ballLost () {
+
+    lives--;
+    livesText.text = 'lives: ' + lives;
+
+    if (lives === 0)
+    {
+        gameOver();
+    }
+    else
+    {
+        bHasLaunch = false;
+
+        ball.reset(paddle.body.x + 16, paddle.y - 16);
+
+        ball.animations.stop();
+    }
+
 }
+
+function ballHitBrick (_ball, _brick) {
+
+    _brick.kill();
+
+    score += 10;
+
+    scoreText.text = 'score: ' + score;
+
+    //  Are they any bricks left?
+    if (bricks.countLiving() == 0)
+    {
+        //  New level starts
+        score += 1000;
+        scoreText.text = 'score: ' + score;
+        introText.text = '- Next Level -';
+
+        //  Let's move the ball back to the paddle
+        ballOnPaddle = true;
+        ball.body.velocity.set(0);
+        ball.x = paddle.x + 16;
+        ball.y = paddle.y - 16;
+        ball.animations.stop();
+
+        //  And bring the bricks back from the dead :)
+        bricks.callAll('revive');
+    }
+
+}
+
+// function ballReset() {
+//     bHasLaunch = false;
+//     ball.reset(paddle.body.x, paddle.body.y - 20);
+// }
 
 function ballHitPaddle(p_ball, p_paddle) {
     var diff = 0;
