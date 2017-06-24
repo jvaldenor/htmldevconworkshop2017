@@ -8,6 +8,7 @@ function preload() {
     game.load.image("ball", "res/ball.png");
     game.load.image("food", "res/bricks.jpg");
     game.load.audio('hitbrick', 'res/hitbrick.wav');
+    game.load.audio("bgMusic", "res/backgroundMusic.mp3");
 }
 var paddle;
 var ball;
@@ -22,6 +23,7 @@ var introText;
 
 
 var hitBrickSound;
+var bgMusic;
 
 function create() {
     game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -54,10 +56,8 @@ function create() {
 
     var brick;
 
-    for (var y = 0; y < 4; y++)
-    {
-        for (var x = 0; x < 15; x++)
-        {
+    for (var y = 0; y < 4; y++) {
+        for (var x = 0; x < 15; x++) {
             brick = bricks.create(120 + (x * 36), 100 + (y * 52), 'food');
             brick.scale.set(0.15);
             brick.body.bounce.set(1);
@@ -66,16 +66,34 @@ function create() {
     }
 
 
-
-    scoreText = game.add.text(32, 550, 'score: 0', { font: "20px Arial", fill: "#ffffff", align: "left" });
-    livesText = game.add.text(680, 550, 'lives: 3', { font: "20px Arial", fill: "#ffffff", align: "left" });
-    introText = game.add.text(game.world.centerX, 400, '- click to start -', { font: "40px Arial", fill: "#ffffff", align: "center" });
+    scoreText = game.add.text(32, 550, 'score: 0', {font: "20px Arial", fill: "#ffffff", align: "left"});
+    livesText = game.add.text(680, 550, 'lives: 3', {font: "20px Arial", fill: "#ffffff", align: "left"});
+    introText = game.add.text(game.world.centerX, 400, '- click to start -', {
+        font: "40px Arial",
+        fill: "#ffffff",
+        align: "center"
+    });
     introText.anchor.setTo(0.5, 0.5);
 
 
     hitBrickSound = game.add.audio('hitbrick');
+    bgMusic = game.add.audio('bgMusic');
+    bgMusic.play();
 
 
+    game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
+    game.input.onDown.add(gofull, this);
+
+
+}
+function gofull() {
+
+    if (game.scale.isFullScreen) {
+        game.scale.stopFullScreen();
+    }
+    else {
+        game.scale.startFullScreen(false);
+    }
 
 }
 var bHasLaunch = false;
@@ -102,17 +120,15 @@ function launchBall() {
 }
 
 
-function ballLost () {
+function ballLost() {
 
     lives--;
     livesText.text = 'lives: ' + lives;
 
-    if (lives === 0)
-    {
+    if (lives === 0) {
         gameOver();
     }
-    else
-    {
+    else {
         bHasLaunch = false;
 
         ball.reset(paddle.body.x + 16, paddle.y - 16);
@@ -122,17 +138,16 @@ function ballLost () {
 
 }
 
-function ballHitBrick (_ball, _brick) {
+function ballHitBrick(_ball, _brick) {
 
     _brick.kill();
 
     score += 10;
-   hitBrickSound.play();
+    hitBrickSound.play();
     scoreText.text = 'score: ' + score;
 
     //  Are they any bricks left?
-    if (bricks.countLiving() == 0)
-    {
+    if (bricks.countLiving() == 0) {
         //  New level starts
         score += 1000;
         scoreText.text = 'score: ' + score;
@@ -170,8 +185,7 @@ function ballHitPaddle(p_ball, p_paddle) {
 }
 
 
-
-function gameOver () {
+function gameOver() {
 
     ball.body.velocity.setTo(0, 0);
 
