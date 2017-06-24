@@ -7,6 +7,7 @@ function preload() {
     game.load.image("paddle", "res/paddle.jpg");
     game.load.image("ball", "res/ball.png");
     game.load.image("food", "res/bricks.jpg");
+    game.load.audio('hitbrick', 'res/hitbrick.wav');
 }
 var paddle;
 var ball;
@@ -18,6 +19,9 @@ var score = 0;
 var scoreText;
 var livesText;
 var introText;
+
+
+var hitBrickSound;
 
 function create() {
     game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -67,6 +71,10 @@ function create() {
     livesText = game.add.text(680, 550, 'lives: 3', { font: "20px Arial", fill: "#ffffff", align: "left" });
     introText = game.add.text(game.world.centerX, 400, '- click to start -', { font: "40px Arial", fill: "#ffffff", align: "center" });
     introText.anchor.setTo(0.5, 0.5);
+
+
+    hitBrickSound = game.add.audio('hitbrick');
+
 
 
 }
@@ -119,7 +127,7 @@ function ballHitBrick (_ball, _brick) {
     _brick.kill();
 
     score += 10;
-
+   hitBrickSound.play();
     scoreText.text = 'score: ' + score;
 
     //  Are they any bricks left?
@@ -163,6 +171,18 @@ function ballHitPaddle(p_ball, p_paddle) {
 
 
 
+function gameOver () {
+
+    ball.body.velocity.setTo(0, 0);
+
+    introText.text = 'Game Over!';
+    introText.visible = true;
+    //
+    // var request = new XMLHttpRequest();
+    // request.open('POST', '/my/url', true);
+    // request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+    // request.send(data);
+}
 
 
 
